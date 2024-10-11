@@ -2,9 +2,10 @@
 
 import random
 import logging
+from re import S
 
 MAX_GUESSES: int = 10 # Number of guesses available to the player
-NUM_DIGITS: int = 12 # Length of the 'secret number'
+NUM_DIGITS: int = 3 # Length of the 'secret number'
 
 def main() -> None:
     # Print Instructions to the player
@@ -48,8 +49,10 @@ def get_secret_num() -> str:
     except ValueError as e:
         logging.exception(f"\nA ValueError occurred: {e}")
         
-
+    
+    sampled_nums = [str(num) for num in sampled_nums]
     secret_num = ''.join(sampled_nums)
+
 
     return secret_num
 
