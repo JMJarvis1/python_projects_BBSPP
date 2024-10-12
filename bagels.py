@@ -3,31 +3,18 @@
 import sys
 import random
 import logging
+import os
 
 
 MAX_GUESSES: int = 10  # Number of guesses available to the player
-NUM_DIGITS: int = 3  # Length of the 'secret number'
+NUM_DIGITS: int = 3  # Length of the secret number
 
 
 def main() -> None:
-    # Print Instructions to the player
-    print(f"""
-        I have created a secret number that is comprised of {NUM_DIGITS}
-        non-repeating digits. You will have {MAX_GUESSES} chances to guess
-        the number correctely. After each incorrect guess, you 
-        will be presented with a series of clues indicating how 
-        close your previous guess was to the secret number. 
-
-        These clues are:
-            Fermi:  You have a correct digit in the correct place.
-            Pico:   You have a correct digit in an incorrect place.
-            Bagels: You do not have any correct digits. 
-
-        For Example: 
-            If you guess 123 and the secret number is 413 then the
-            clue you will receive will be "Pico Fermi". 
-          """)
     while True:  # Main game loop.
+        # Print title and game instructions
+        print_intro()
+
         # Get secret number
         secret_nums: list = get_secret_num()
 
@@ -37,11 +24,14 @@ def main() -> None:
         while guess_count <= MAX_GUESSES:
             print(f"Guess #{guess_count}")
 
-            guess: str = input("> ")
+            guess: str = input("> ")  # Player input
+
+            if not validate_guess(guess):
+                continue
 
             guess_count += 1
 
-            if guess == "".join(str(secret_nums)):
+            if guess == "".join(secret_nums):
                 print("You got it!")  # Player wins
                 break
 
@@ -49,14 +39,58 @@ def main() -> None:
             clue: str = get_clue(guess, secret_nums)
             print(clue)
 
-        # TODO Ask if player wants to play again
+        clr_scrn()
+        print("\nYou have run out of guesses.\n")
+        # Ask if player wants to play again
         keep_playing: bool = play_new_game()
 
         if not keep_playing:
             break
 
+    clr_scrn()
+    sys.exit()
 
-def get_secret_num() -> list[int]:
+
+def print_intro() -> None:
+    clr_scrn()
+
+    title_msg: str = "Bagels"
+
+    instruction_msg: str = f"""
+        Instructions:
+          
+            I have created a secret number that is comprised of {NUM_DIGITS}
+            unique digits. 
+            
+            You will have {MAX_GUESSES} chances to guess this number
+            correctly. 
+            
+            After each incorrect guess, you will be presented with 
+            a series of clues indicating:
+                1. Whether one or more digits from your guess matches
+                   a digit from the secret number. 
+                2. Whether one or more of your matching digits is in the
+                   correct place.
+                   
+            There are three possible clues:
+                Fermi:  You have a correct digit in the correct place.
+                Pico:   You have a correct digit in an incorrect place.
+                Bagels: You do not have any correct digits. 
+            
+            For Example: 
+                If you guess 123 and the secret number is 413, then the
+                clue you will receive could be either "Pico Fermi" or 
+                "Fermi Pico".  
+          """
+
+    print(title_msg.center(79), "\n", instruction_msg)
+
+
+def clr_scrn() -> None:
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def get_secret_num() -> list[str]:
     nums: list[int] = [num for num in range(10)]
 
     random.shuffle(nums)
@@ -69,10 +103,22 @@ def get_secret_num() -> list[int]:
     return [str(num) for num in sampled_nums]
 
 
+def validate_guess(guess) -> bool:
+    "Check if player's guess meets game requirements."
+    try:
+        int(guess)
+        if len(set(guess)) == NUM_DIGITS:  # Check for length and unique digits
+            return True
+    except ValueError as e:  # Handle non-integer exceptions
+        logging.exception(f"A ValueError has occurred: {e}")
+
+    return False
+
+
 def get_clue(guess, secret_num) -> str:
     clues: list[str] = []
 
-    for i in NUM_DIGITS:
+    for i in range(NUM_DIGITS):
         if guess[i] == secret_num[i]:
             clues.append("Fermi")
         elif guess[i] in secret_num:
@@ -85,9 +131,9 @@ def get_clue(guess, secret_num) -> str:
 
 
 def play_new_game() -> bool:
-    response = input("Would you like to play again? (y/n)\n> ")
+    response: str = input("Would you like to play again? (y/n)\n> ")
 
-    return True if response.startswith("y") else False
+    return True if response.lower().startswith("y") else False
 
 
 if __name__ == "__main__":
