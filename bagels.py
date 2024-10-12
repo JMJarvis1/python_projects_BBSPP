@@ -39,8 +39,11 @@ def main() -> None:
             clue: str = get_clue(guess, secret_nums)
             print(clue)
 
-        clr_scrn()
-        print("\nYou have run out of guesses.\n")
+        if guess_count > MAX_GUESSES:
+            clr_scrn()
+            print(
+                f"\nYou have run out of guesses. The correct number was {secret_nums} \n"
+            )
         # Ask if player wants to play again
         keep_playing: bool = play_new_game()
 
