@@ -4,6 +4,7 @@ import sys
 import random
 import logging
 
+
 MAX_GUESSES: int = 10  # Number of guesses available to the player
 NUM_DIGITS: int = 3  # Length of the 'secret number'
 
@@ -26,22 +27,36 @@ def main() -> None:
             If you guess 123 and the secret number is 413 then the
             clue you will receive will be "Pico Fermi". 
           """)
+    while True:  # Main game loop.
+        # Get secret number
+        secret_nums: list = get_secret_num()
 
-    # TODO Get secret number
-    secret_num: str = get_secret_num()
-    print("Hello, world?")
-    # TODO Get player guess
+        # Get player guess
+        guess_count: int = 1
 
-    # TODO Get Clues
+        while guess_count <= MAX_GUESSES:
+            print(f"Guess #{guess_count}")
 
-    # TODO Display clues or victor message
+            guess: str = input("> ")
 
-    # TODO Ask if player wants to play again
+            guess_count += 1
+
+            if guess == "".join(str(secret_nums)):
+                print("You got it!")  # Player wins
+                break
+
+            # Generate and display clue
+            clue: str = get_clue(guess, secret_nums)
+            print(clue)
+
+        # TODO Ask if player wants to play again
+        keep_playing: bool = play_new_game()
+
+        if not keep_playing:
+            break
 
 
-def get_secret_num() -> str:
-    secret_num: str = ""
-
+def get_secret_num() -> list[int]:
     nums: list[int] = [num for num in range(10)]
 
     random.shuffle(nums)
@@ -51,11 +66,28 @@ def get_secret_num() -> str:
         logging.exception(f"\nA ValueError occurred: {e}")
         sys.exit()
 
-    sampled_nums = [str(num) for num in sampled_nums]
+    return [str(num) for num in sampled_nums]
 
-    secret_num = "".join(sampled_nums)
 
-    return secret_num
+def get_clue(guess, secret_num) -> str:
+    clues: list[str] = []
+
+    for i in NUM_DIGITS:
+        if guess[i] == secret_num[i]:
+            clues.append("Fermi")
+        elif guess[i] in secret_num:
+            clues.append("Pico")
+
+    if len(clues) == 0:
+        return "Bagels"
+    else:
+        return " ".join(clues)
+
+
+def play_new_game() -> bool:
+    response = input("Would you like to play again? (y/n)\n> ")
+
+    return True if response.startswith("y") else False
 
 
 if __name__ == "__main__":
