@@ -1,10 +1,9 @@
-"""Bagels - A deductive reasoning game where the player is asked to guess a number of a set length using the clues provided following each incorrect guess. The player wins if they guess correctly before running out of guesses"""
+"""Bagels v1.0 - A deductive reasoning game where the player is asked to guess a number of a set length using the clues provided following each incorrect guess. The player wins if they guess correctly before running out of guesses"""
 
 import sys
 import random
 import logging
 import os
-
 
 MAX_GUESSES: int = 10  # Number of guesses available to the player
 NUM_DIGITS: int = 3  # Length of the secret number
@@ -32,7 +31,8 @@ def main() -> None:
             guess_count += 1
 
             if guess == "".join(secret_nums):
-                print("You got it!")  # Player wins
+                clr_scrn()
+                print("You got it!\n")  # Player wins
                 break
 
             # Generate and display clue
@@ -83,7 +83,10 @@ def print_intro() -> None:
             For Example: 
                 If you guess 123 and the secret number is 413, then the
                 clue you will receive could be either "Pico Fermi" or 
-                "Fermi Pico".  
+                "Fermi Pico". 
+
+                The order of the clues are not related to the order of
+                the digits in the secret number. 
           """
 
     print(title_msg.center(79), "\n", instruction_msg)
@@ -130,6 +133,7 @@ def get_clue(guess, secret_num) -> str:
     if len(clues) == 0:
         return "Bagels"
     else:
+        random.shuffle(clues)
         return " ".join(clues)
 
 
