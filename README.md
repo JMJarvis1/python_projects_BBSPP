@@ -1,0 +1,2 @@
+This repository holds programing exercises that I have completed while reading through Al Sweigart's <i>The Big Book of Small Python Projects</i>. Each program is inteded to be identical in function to it's respective program from the book,
+but has been written in accordance with the book's instructions, which instruct the reader to attempt to recreate the functioanlity of the program without directly referencing the original code from the book.
