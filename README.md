@@ -9,4 +9,4 @@
 bagels.py
 
 #### **Simulations**<br>------------
-birthdayparadox.py (in progress)
+birthdayparadox.py
