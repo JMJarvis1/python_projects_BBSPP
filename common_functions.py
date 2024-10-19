@@ -1,14 +1,12 @@
-
-
 import os
 import textwrap
 
 
-def clr_scrn() -> None:
+def clear_scrn() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def display_message(message: list[str] | str, txt_width: int) -> None:
+def display_message(message: list[str] | str, txt_width: int = 80) -> None:
     """
     Format and display the introductory text of the program.
 
@@ -27,9 +25,11 @@ def display_message(message: list[str] | str, txt_width: int) -> None:
     else:
         print(message)
 
+
 def _print_long_message(message, txt_width) -> None:
     long_msg: list[str] = textwrap.wrap(message, txt_width)
     [print(line) for line in long_msg]
+
 
 def last_day_of_month(month: int) -> int:
     """

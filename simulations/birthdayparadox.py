@@ -5,43 +5,34 @@ import sys
 
 sys.path.append(os.getcwd() + "/..")
 
-from common_functions import clr_scrn, display_message, last_day_of_month
+from common_functions import clear_scrn, display_message, last_day_of_month
 
 
 def main() -> None:
-    # Min/max group size that can go to generator
-    RNG_BIRTHDAYS: range = range(2, 101)
-    TXT_WIDTH = 80
+    # Settings
+    rng_grp_size: range = range(2, 101)  # Number of people in grp (2-100)
+    txt_width = 80  # Maximum width in chracters of displayed text.
+    num_sims = 100_000  # Number of simulations to run
 
     intro_msg: list[str] = [
-        "The Birthday Paradox".center(TXT_WIDTH),
-        f"{"-"*30}".center(TXT_WIDTH),
+        "The Birthday Paradox".center(txt_width),
+        f"{"-"*30}".center(txt_width),
         "",
-        "The Birthday Paradox is a common name given to the surprisingly high probability of any two persons in an N sized group sharing the same birthday. In fact, the size of the group required for there to be a very high probability that any two people will share matching birthdays is much smaller than most people typically assume.",
+        "The Birthday Paradox is a common name given to the surprisingly high probability of any two people in an N sized group sharing the same birthday. In fact, the size of the group required for there to be a very high probability that any two people will share matching birthdays is much smaller than most people typically assume.",
         "",
         "For more information go to: https://en.wikipedia.org/wiki/Birthday_problem",
     ]
-    clr_scrn()
-    display_message(intro_msg, TXT_WIDTH)
+    input_msg: str = f"\nEnter the size of the group that you wish to generate birthdays for: ({rng_grp_size.start}-{rng_grp_size.stop - 1}):"
 
-    # Get user to input number of birthdays to generate
-    # Loops until user inputs valid information.
+    clear_scrn()
+    display_message(intro_msg, txt_width)
 
-    group_size: str = ""
-    num_birthdays = 0
-    while (not group_size.isdecimal()) | (num_birthdays not in RNG_BIRTHDAYS):
-        group_size = input(
-            "\nEnter the size of the group that you wish to generate birthdays for.\n> "
-        )
-        try:
-            num_birthdays = int(group_size)
-
-        except ValueError:
-            continue
+    # Loops until user inputs valid group sise to generate birthdays for.
+    grp_size: int = get_group_size(rng_grp_size, txt_width, input_msg)
 
     # Generate and display the birthdays
-    birthdays: list[str] = generate_birthdays(num_birthdays)
-    display_birthdays(birthdays, num_birthdays)
+    birthdays: list[str] = generate_birthdays(grp_size)
+    display_birthdays(birthdays)
 
     # Determine if two birthdays match
     match: str | None = get_match(birthdays)
@@ -51,11 +42,85 @@ def main() -> None:
     else:
         match_msg += "There were no matches in this simulation.\n"
 
-    display_message(match_msg, TXT_WIDTH)
+    display_message(match_msg, txt_width)
 
-    # TODO Run through 100_000 simulations
+    # Run through 100_000 simulations
+    sim_message = f"\nNow the program will run {num_sims:,} simulations on a group of {grp_size} people:\n"
+    display_message(sim_message)
 
-    # TODO Display simulation results
+    sim_matches: int = run_simulations(num_sims, grp_size)
+
+    sim_ratio = sim_matches * 100 / num_sims
+
+    # Display simulation results
+    sim_results_msg = f"\nOut of {num_sims:,} simulations of {grp_size} people run, {sim_matches:,} simulations resulted in at least two person sharing the same birthday. That is a ratio of {round(sim_ratio)}%!\n"
+    display_message(sim_results_msg)
+
+    sys.exit()
+
+
+def get_message(msg_name):
+    messages = {}
+
+
+def run_simulations(num_sims: int, grp_size: int) -> int:
+    """
+    Runs multiple iterations of the birthday paradox simulation.
+
+    :param num_sims: The number of iterations to run.
+    :type num_sims: int
+    :param grp_size: Group size to generate birthdays for.
+    :type grp_size: int
+    :return sim_matches: Number of total matches from all simulations
+    :rtype: int
+    """
+    # Initialize count of sims with matching birthdays.
+    sim_matches: int = 0
+    for sim_count in range(num_sims):
+        birthdays = generate_birthdays(grp_size)
+        match = get_match(birthdays)
+
+        if match is not None:
+            sim_matches += 1
+
+        sim_count += 1
+
+        if sim_count % 10_000 == 0:
+            print(f"{sim_count:,} simulations run...")
+
+        if sim_count == num_sims:
+            print("\nAll simulations successfully run.")
+    return sim_matches
+
+
+def get_group_size(rng_grp_size: range, txt_width: int, input_msg: str) -> int:
+    """
+    _summary_
+
+    :param rng_grp_size: Allowed size range for group.
+    :type rng_grp_size: range
+    :param txt_width: Width of text in characters to display.
+    :type txt_width: int
+    :param input_msg: User imput prompt for group size.
+    :type input_msg: str
+    :raises ValueError: Raise for invalid user input
+    :return grp_size: Number of people in group
+    :rtype: int
+    """
+    while True:
+        try:
+            display_message(input_msg, txt_width)
+            grp_size = int(input("> "))
+            if grp_size not in rng_grp_size:
+                raise ValueError
+            else:
+                break
+        except ValueError:
+            print(
+                f"\nError: Please type a numbers that is between {rng_grp_size.start} and {rng_grp_size.stop - 1} inclusive."
+            )
+
+    return grp_size
 
 
 def generate_birthdays(numBirthdays: int) -> list[str]:
@@ -70,8 +135,6 @@ def generate_birthdays(numBirthdays: int) -> list[str]:
     :example:
     >>> birthdays: list[str] = generate_birthdays(42)
         print(birthdays)
-
-
     """
     birthdays: list[str] = []
 
@@ -86,10 +149,15 @@ def generate_birthdays(numBirthdays: int) -> list[str]:
     return birthdays
 
 
-def display_birthdays(birthdays: list[str], num_birthdays) -> None:
-    "Formats and displays birthdays."
+def display_birthdays(birthdays: list[str]) -> None:
+    """
+    Formats and displays birthdays.
 
-    print(f"\nHere are the generated birthdays for a group of {num_birthdays} people:")
+    :param birthdays: List of generated birthdays in the format of 'Nov 01'.
+    :type birthdays: list[str]
+    """
+
+    print(f"\nHere are the generated birthdays for a group of {len(birthdays)} people:")
 
     for i in range(len(birthdays) // 6 + 1):  # Print N rows of 6 dates
         index = i * 6
@@ -103,15 +171,20 @@ def display_birthdays(birthdays: list[str], num_birthdays) -> None:
 
 
 def get_match(birthdays: list[str]) -> str | None:
-    """Returns a datetime object for a birthday that occurs more than once."""
+    """
+    Returns a datetime object for a birthday that occurs more than once.
 
-    if len(birthdays) == len(set(birthdays)):
-        pass
-    else:
-        for i, date in enumerate(birthdays):
-            for candidate in birthdays[i + 1 :]:
-                if date == candidate:
-                    match = date
+    :param birthdays: List of generated birthdays in the format of 'Nov 01'.
+    :type birthdays: list[str]
+    :return: Date (i.e. 'Nov 1') of first birthday with a match or None
+    :rtype: str | None
+    """
+
+    if len(birthdays) != len(set(birthdays)):
+        for i, first_date in enumerate(birthdays):
+            for second_date in birthdays[i + 1 :]:
+                if first_date == second_date:
+                    match = first_date
                     return match
     return None
 

@@ -8,7 +8,7 @@ import logging
 
 sys.path.append(os.getcwd() + "/..")
 
-from common_functions import clr_scrn
+from common_functions import clear_scrn
 
 MAX_GUESSES: int = 10  # Number of guesses available to the player
 NUM_DIGITS: int = 3  # Length of the secret number
@@ -36,7 +36,7 @@ def main() -> None:
             guess_count += 1
 
             if guess == "".join(secret_nums):
-                clr_scrn()
+                clear_scrn()
                 print("You got it!\n")  # Player wins
                 break
 
@@ -45,7 +45,7 @@ def main() -> None:
             print(clue)
 
         if guess_count > MAX_GUESSES:
-            clr_scrn()
+            clear_scrn()
             print(
                 f"\nYou have run out of guesses. The correct number was {secret_nums} \n"
             )
@@ -55,12 +55,12 @@ def main() -> None:
         if not keep_playing:
             break
 
-    clr_scrn()
+    clear_scrn()
     sys.exit()
 
 
 def print_intro() -> None:
-    clr_scrn()
+    clear_scrn()
 
     title_msg: str = "Bagels"
 
