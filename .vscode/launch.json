@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONPATH": "/workspaces/python_games"
+                "PYTHONPATH": "/Users/johnmichaeljarvis/Documents/GitHub/python_projects_BBSPP"
             }
         }
     ]

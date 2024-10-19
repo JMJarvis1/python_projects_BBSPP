@@ -14,53 +14,57 @@ def main() -> None:
     txt_width = 80  # Maximum width in chracters of displayed text.
     num_sims = 100_000  # Number of simulations to run
 
-    intro_msg: list[str] = [
-        "The Birthday Paradox".center(txt_width),
-        f"{"-"*30}".center(txt_width),
-        "",
-        "The Birthday Paradox is a common name given to the surprisingly high probability of any two people in an N sized group sharing the same birthday. In fact, the size of the group required for there to be a very high probability that any two people will share matching birthdays is much smaller than most people typically assume.",
-        "",
-        "For more information go to: https://en.wikipedia.org/wiki/Birthday_problem",
-    ]
-    input_msg: str = f"\nEnter the size of the group that you wish to generate birthdays for: ({rng_grp_size.start}-{rng_grp_size.stop - 1}):"
+    while True:  # Main loop
+        intro_msg: list[str] = [
+            "The Birthday Paradox".center(txt_width),
+            f"{'-'*30}".center(txt_width),
+            "",
+            "The Birthday Paradox is a common name given to the surprisingly high probability of any two people in an N sized group sharing the same birthday. In fact, the size of the group required for there to be a very high probability that any two people will share matching birthdays is much smaller than most people typically assume.",
+            "",
+            "For more information go to: https://en.wikipedia.org/wiki/Birthday_problem",
+        ]
+        input_msg: str = f"\nEnter the size of the group that you wish to generate birthdays for: ({rng_grp_size.start}-{rng_grp_size.stop - 1}):"
 
-    clear_scrn()
-    display_message(intro_msg, txt_width)
+        clear_scrn()
+        display_message(intro_msg, txt_width)
 
-    # Loops until user inputs valid group sise to generate birthdays for.
-    grp_size: int = get_group_size(rng_grp_size, txt_width, input_msg)
+        # Loops until user inputs valid group sise to generate birthdays for.
+        grp_size: int = get_group_size(rng_grp_size, txt_width, input_msg)
 
-    # Generate and display the birthdays
-    birthdays: list[str] = generate_birthdays(grp_size)
-    display_birthdays(birthdays)
+        # Generate and display the birthdays
+        birthdays: list[str] = generate_birthdays(grp_size)
+        display_birthdays(birthdays)
 
-    # Determine if two birthdays match
-    match: str | None = get_match(birthdays)
-    match_msg: str = ""
-    if match is not None:
-        match_msg += f"There is at least one pair of people in this simulation sharing a birthday on {match}.\n"
-    else:
-        match_msg += "There were no matches in this simulation.\n"
+        # Determine if two birthdays match
+        match: str | None = get_match(birthdays)
+        match_msg: str = ""
+        if match is not None:
+            match_msg += f"There is at least one pair of people in this simulation sharing a birthday on {match}.\n"
+        else:
+            match_msg += "There were no matches in this simulation.\n"
 
-    display_message(match_msg, txt_width)
+        display_message(match_msg, txt_width)
 
-    # Run through 100_000 simulations
-    sim_message = f"\nNow the program will run {num_sims:,} simulations on a group of {grp_size} people:\n"
-    display_message(sim_message)
+        # Run through 100_000 simulations
+        sim_message = f"\nNow the program will run {num_sims:,} simulations on a group of {grp_size} people:\n"
+        display_message(sim_message)
 
-    sim_matches: int = run_simulations(num_sims, grp_size)
+        sim_matches: int = run_simulations(num_sims, grp_size)
 
-    sim_ratio = sim_matches * 100 / num_sims
+        sim_ratio = sim_matches * 100 / num_sims
 
-    # Display simulation results
-    sim_results_msg = f"\nOut of {num_sims:,} simulations of {grp_size} people run, {sim_matches:,} simulations resulted in at least two person sharing the same birthday. That is a ratio of {round(sim_ratio)}%!\n"
-    display_message(sim_results_msg)
+        # Display simulation results
+        sim_results_msg = f"Out of {num_sims:,} simulations of {grp_size} people run, {sim_matches:,} simulations resulted in at least two person sharing the same birthday. That is a ratio of {round(sim_ratio)}%!\n"
+        display_message(sim_results_msg)
+
+        if (
+            not input("\nWould you like to run another simulation (Y/N)? ")
+            .lower()
+            .startswith("y")
+        ):
+            break
 
     sys.exit()
-
-
-def get_message(msg_name):
-    messages = {}
 
 
 def run_simulations(num_sims: int, grp_size: int) -> int:
@@ -89,7 +93,7 @@ def run_simulations(num_sims: int, grp_size: int) -> int:
             print(f"{sim_count:,} simulations run...")
 
         if sim_count == num_sims:
-            print("\nAll simulations successfully run.")
+            print("\nAll simulations successfully run.\n")
     return sim_matches
 
 
