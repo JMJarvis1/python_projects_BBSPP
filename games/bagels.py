@@ -1,9 +1,14 @@
 """Bagels v1.0 - A deductive reasoning game where the player is asked to guess a number of a set length using the clues provided following each incorrect guess. The player wins if they guess correctly before running out of guesses"""
 
 import sys
+import os
 import random
 import logging
-import os
+
+
+sys.path.append(os.getcwd() + "/..")
+
+from common_functions import clr_scrn
 
 MAX_GUESSES: int = 10  # Number of guesses available to the player
 NUM_DIGITS: int = 3  # Length of the secret number
@@ -90,10 +95,6 @@ def print_intro() -> None:
           """
 
     print(title_msg.center(79), "\n", instruction_msg)
-
-
-def clr_scrn() -> None:
-    os.system("cls" if os.name == "nt" else "clear")
 
 
 def get_secret_num() -> list[str]:
