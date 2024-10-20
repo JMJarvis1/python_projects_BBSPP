@@ -16,7 +16,7 @@ from common_functions import clear_scrn, display_message, last_day_of_month
 
 def main() -> None:
     # Settings
-    rng_grp_size: range = range(2, 101)  # Number of people in grp (2-100)
+    rng_grp_size: range = range(2, 101)  # Number of people in group (2-100)
     txt_width = 80  # Maximum width in chracters of displayed text.
     num_sims = 100_000  # Number of simulations to run
 
