@@ -3,12 +3,13 @@ import textwrap
 
 
 def clear_scrn() -> None:
+    """Clear screen on 'nt' (windows) and posix (macOS, unix)"""
     os.system("cls" if os.name == "nt" else "clear")
 
 
 def display_message(message: list[str] | str, txt_width: int = 80) -> None:
     """
-    Format and display the introductory text of the program.
+    Format and display the text of the program.
 
     :param txt_width: width of the diplayed text, defaults to 80
     :type txt_width: int, optional
@@ -26,8 +27,16 @@ def display_message(message: list[str] | str, txt_width: int = 80) -> None:
         print(message)
 
 
-def _print_long_message(message, txt_width) -> None:
-    long_msg: list[str] = textwrap.wrap(message, txt_width)
+def _print_long_message(message: str, txt_width: int = 80) -> None:
+    """
+    Displays text wrapped to a desired width.
+
+    :param message: String to be displayed
+    :type message: str
+    :param txt_width: Width tet will be wrapped to.
+    :type txt_width: int
+    """
+    long_msg: list = textwrap.wrap(message, txt_width)
     [print(line) for line in long_msg]
 
 
@@ -40,7 +49,6 @@ def last_day_of_month(month: int) -> int:
     :raises ValueError: Raised if the value of the month provided as an argument is not between 1 and 12 inclusive.
     :return date: The last day of the month.
     :rtype: int
-
 
     :Example:
 

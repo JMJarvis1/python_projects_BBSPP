@@ -1,3 +1,9 @@
+"""
+birthdayparadox.py, by John Michael Jarvis JMJarvis1@icloud.com
+A simulation that allows the user to determine then pobability that any two
+people in a group of N number of people share the ssame birthday.
+"""
+
 import random
 import datetime as dt
 import os
@@ -54,7 +60,7 @@ def main() -> None:
         sim_ratio = sim_matches * 100 / num_sims
 
         # Display simulation results
-        sim_results_msg = f"Out of {num_sims:,} simulations of {grp_size} people run, {sim_matches:,} simulations resulted in at least two person sharing the same birthday. That is a ratio of {round(sim_ratio)}%!\n"
+        sim_results_msg = f"Out of {num_sims:,} simulations of {grp_size} people run, {sim_matches:,} simulations resulted in at least two person sharing the same birthday. That is a ratio of {round(sim_ratio, 1) if sim_ratio > 1 else round(sim_ratio, 2)}%!\n"
         display_message(sim_results_msg)
 
         if (
@@ -163,15 +169,12 @@ def display_birthdays(birthdays: list[str]) -> None:
 
     print(f"\nHere are the generated birthdays for a group of {len(birthdays)} people:")
 
-    for i in range(len(birthdays) // 6 + 1):  # Print N rows of 6 dates
-        index = i * 6
+    for index in range(len(birthdays) // 6 + 1):  # Print N rows of 6 dates
+        index = index * 6
         print()
         ([print(f"{date}", end="    ") for date in birthdays[index : index + 6]])
 
-    if len(birthdays) % 6 == 0:
-        print()
-    else:
-        print("\n")
+    print() if len(birthdays) % 6 == 0 else print("\n")
 
 
 def get_match(birthdays: list[str]) -> str | None:
@@ -185,8 +188,8 @@ def get_match(birthdays: list[str]) -> str | None:
     """
 
     if len(birthdays) != len(set(birthdays)):
-        for i, first_date in enumerate(birthdays):
-            for second_date in birthdays[i + 1 :]:
+        for index, first_date in enumerate(birthdays):
+            for second_date in birthdays[index + 1 :]:
                 if first_date == second_date:
                     match = first_date
                     return match
