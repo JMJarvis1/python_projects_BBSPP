@@ -32,9 +32,18 @@ More information can be found at: https://en.wikipedia.org/wiki/blackjack
 
 """
 
+import sys
+import os
+
+sys.path.append(os.getcwd() + "/..")
+
+from common_functions import clear_scrn
+
 
 def main():
     money = 5000
+
+    clear_scrn()
 
     while True:  # Main game loop.
         # TODO Display Introduction
@@ -66,6 +75,8 @@ def main():
         # TODO Determine if palyer can or wants to continue.
 
         break
+
+    sys.exit()
 
 
 if __name__ == "__main__":
