@@ -46,13 +46,14 @@ def main():
     message = input("> ")
 
     if message == "":
-        sys.exit()
+        sys.exit()  # End progam if user does not enter a message.
 
     for line in bitmap.splitlines():
         for index, bit in enumerate(line):
             if bit == " ":
-                print(" ", end="")
+                print(" ", end="")  # print blank space in blank space
             else:
+                # Print one character from message each loop
                 print(message[index % len(message)], end="")
         print()
     print()

@@ -11,7 +11,7 @@ import sys
 
 sys.path.append(os.getcwd() + "/..")
 
-from common_functions import clear_scrn, display_message, last_day_of_month
+from common_functions import clear_scrn, display_message, month_end_date
 
 
 def main() -> None:
@@ -150,7 +150,7 @@ def generate_birthdays(numBirthdays: int) -> list[str]:
 
     for i in range(numBirthdays):
         month: int = random.randint(1, 12)
-        last_day: int = last_day_of_month(month)
+        last_day: int = month_end_date(month)
 
         day: int = random.randint(1, last_day)
         birthday: dt.datetime = dt.datetime(year=1900, month=month, day=day)

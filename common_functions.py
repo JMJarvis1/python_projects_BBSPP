@@ -40,7 +40,7 @@ def _print_long_message(message: str, txt_width: int = 80) -> None:
     [print(line) for line in long_msg]
 
 
-def last_day_of_month(month: int) -> int:
+def month_end_date(month: int) -> int:
     """
     Returns the last day of a given month as an integer value.
 
