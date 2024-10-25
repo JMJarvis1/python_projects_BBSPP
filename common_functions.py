@@ -1,5 +1,6 @@
 import os
 import textwrap
+from typing import Callable, Literal
 
 
 def clear_scrn() -> None:
@@ -7,7 +8,11 @@ def clear_scrn() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def display_message(message: list[str] | str, txt_width: int = 80) -> None:
+def display_message(
+    message: list[str] | str,
+    txt_width: int = 80,
+    msg_just: Literal["ljust", "rjust", "center"] = "ljust",
+) -> None:
     """
     Format and display the text of the program.
 
@@ -20,11 +25,22 @@ def display_message(message: list[str] | str, txt_width: int = 80) -> None:
             if len(line) > txt_width:
                 _print_long_message(line, txt_width)
             else:
+                line = justify_txt(line, msg_just, txt_width)
                 print(line)
     elif isinstance(message, str) & (len(message) > txt_width):
         _print_long_message(message, txt_width)
     else:
         print(message)
+
+
+def justify_txt(msg: str, msg_just: str, width: int, fillchar: str = " ") -> str:
+    match msg_just:
+        case "center":
+            return msg.center(width, fillchar)
+        case "rjust":
+            return msg.rjust(width, fillchar)
+        case _:
+            return msg.ljust(width, fillchar)
 
 
 def _print_long_message(message: str, txt_width: int = 80) -> None:
