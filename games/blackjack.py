@@ -32,13 +32,11 @@ More information can be found at: https://en.wikipedia.org/wiki/blackjack
 
 """
 
-import sys
-import os
 import json
 import random
 import time
 from typing import Callable, Literal
-from game_functions import clear_scrn, display_message, play_again
+import game_functions
 
 # Constants
 HEARTS: str = chr(9829)  # Character 9829 is '♥'
@@ -82,11 +80,10 @@ def main() -> None:
 
             match player_move:
                 case "Q":
-                    sys.exit()
+                    game_functions.exit_game()
                 case "H" | "D":
                     player_value, message = take_card(deck, player_hand, "player")
                     if player_move == "D":
-
                         wager = get_wager(money, wager)
                     print(" ".join(message))
 
@@ -104,11 +101,11 @@ def main() -> None:
             print("\n--------------\n" + "Dealer's turn:\n" + "--------------")
             while dealer_value < 17:  # Get dealer moves
                 dealer_value, message = take_card(deck, dealer_hand, "dealer")
-                print(message)
+                print(" ".join(message))
                 display_hands(
                     money, wager, player_hand, dealer_hand, player_value, dealer_value
                 )
-                time.sleep(1)
+                time.sleep(2)
 
         display_hands(
             money,
@@ -131,14 +128,14 @@ def main() -> None:
         if money <= 0:
             print("You're broke! It's a good thing this wasn't real money!\n")
             print("Game over...\n")
-            new_game: bool = play_again()
+            new_game: bool = game_functions.play_again()
 
             if new_game:
                 money = MONEY
                 start_game()
                 continue
             else:
-                sys.exit()
+                game_functions.exit_game()
         else:
             continue
 
@@ -147,7 +144,7 @@ def main() -> None:
 
 
 def start_game() -> None:
-    clear_scrn()
+    game_functions.clear_scrn()
 
     # Load program text from JSON file.
     try:
@@ -157,11 +154,11 @@ def start_game() -> None:
 
     # Display Introduction
     title_txt: list = game_txt["title"]
-    display_message(title_txt, msg_just="center")
+    game_functions.display_message(title_txt, msg_just="center")
 
     # Display rules
     rules_intro: list = game_txt["rules"]
-    display_message(rules_intro)
+    game_functions.display_message(rules_intro)
     print()
 
 

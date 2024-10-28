@@ -1,4 +1,6 @@
 import os
+import sys
+import time
 import textwrap
 from typing import Literal
 
@@ -31,6 +33,17 @@ def display_message(
         _print_long_message(message, txt_width)
     else:
         print(message)
+
+
+def exit_game():
+    print("Exiting game", end="")
+
+    for i in range(3):
+        time.sleep(0.75)
+        print(".", end="")
+    time.sleep(0.5)
+    clear_scrn()
+    sys.exit()
 
 
 def justify_txt(msg: str, msg_just: str, width: int, fillchar: str = " ") -> str:
