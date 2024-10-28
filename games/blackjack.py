@@ -36,12 +36,9 @@ import sys
 import os
 import json
 import random
-from typing import Callable
-
-
-sys.path.append(os.getcwd() + "/..")
-
-from common_functions import clear_scrn, display_message, play_again
+import time
+from typing import Callable, Literal
+from game_functions import clear_scrn, display_message, play_again
 
 # Constants
 HEARTS: str = chr(9829)  # Character 9829 is '♥'
@@ -78,20 +75,20 @@ def main() -> None:
         )
         print()
 
-        # Get player moves
+        # Handle player actions
+        print("----------\n" + "Your turn:\n" + "----------\n")
         while player_move not in ["S", "D"]:
             player_move = get_player_move(player_hand)
 
             match player_move:
                 case "Q":
                     sys.exit()
-                case "H":
-                    player_hand.append(deck.pop())
-                case "D":
-                    wager += get_wager(money, wager)
-                    player_hand.append(deck.pop())
+                case "H" | "D":
+                    player_value, message = take_card(deck, player_hand, "player")
+                    if player_move == "D":
 
-            player_value = get_hand_value(player_hand)
+                        wager = get_wager(money, wager)
+                    print(" ".join(message))
 
             display_hands(
                 money, wager, player_hand, dealer_hand, player_value, dealer_value
@@ -99,15 +96,19 @@ def main() -> None:
 
             player_busts: bool = check_for_bust(player_hand)
 
-            if player_busts:
+            if player_value > 21:
                 break
 
-        if (player_busts is False) & (dealer_value < 17):  # Get dealer moves
-            dealer_hand.append(deck.pop())
-            dealer_value = get_hand_value(dealer_hand)
-            display_hands(
-                money, wager, player_hand, dealer_hand, player_value, dealer_value
-            )
+        # Handle dealer actions
+        if player_value < 21:
+            print("\n--------------\n" + "Dealer's turn:\n" + "--------------")
+            while dealer_value < 17:  # Get dealer moves
+                dealer_value, message = take_card(deck, dealer_hand, "dealer")
+                print(message)
+                display_hands(
+                    money, wager, player_hand, dealer_hand, player_value, dealer_value
+                )
+                time.sleep(1)
 
         display_hands(
             money,
@@ -302,6 +303,27 @@ def get_hand_value(hand: list[tuple]) -> int:
             value += 10
 
     return value
+
+
+def take_card(
+    deck: list,
+    hand: list,
+    owner: Literal["player", "dealer"],
+) -> tuple:
+    hand.append(deck.pop())
+    rank, suit = hand[-1]
+
+    message = [
+        "",
+        f"a {rank} of {suit} from the deck.\n",
+    ]
+
+    if owner == "player":
+        message[0] = "\nYou take"
+    elif owner == "dealer":
+        message[0] = "\nThe dealer takes"
+
+    return get_hand_value(hand), message
 
 
 def check_for_bust(hand, func: Callable = get_hand_value) -> bool:
