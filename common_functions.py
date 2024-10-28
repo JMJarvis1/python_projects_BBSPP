@@ -1,6 +1,6 @@
 import os
 import textwrap
-from typing import Callable, Literal
+from typing import Literal
 
 
 def clear_scrn() -> None:
@@ -84,3 +84,13 @@ def month_end_date(month: int) -> int:
             pass  # Default
 
     return date
+
+
+def play_again() -> bool:
+    answer: str = ""
+    while not answer.startswith(("Y", "N")):
+        print("Would you like to play another game? (Y/N)")
+
+        answer = input("> ").upper().strip()
+
+    return True if answer == "Y" else False
