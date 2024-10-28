@@ -35,7 +35,7 @@ More information can be found at: https://en.wikipedia.org/wiki/blackjack
 import json
 import random
 import time
-from typing import Callable, Literal
+from typing import Literal
 import game_functions
 
 # Constants
@@ -63,14 +63,9 @@ def main() -> None:
         player_hand: list = [deck.pop() for i in range(2)]
         dealer_hand: list = [deck.pop() for i in range(2)]
 
-        player_value: int = get_hand_value(player_hand)
-        dealer_value: int = get_hand_value(dealer_hand)
-
         # Display Hands
         print()
-        display_hands(
-            money, wager, player_hand, dealer_hand, player_value, dealer_value
-        )
+        display_hands(money, wager, player_hand, dealer_hand)
         print()
 
         # Handle player actions
@@ -87,11 +82,7 @@ def main() -> None:
                         wager = get_wager(money, wager)
                     print(" ".join(message))
 
-            display_hands(
-                money, wager, player_hand, dealer_hand, player_value, dealer_value
-            )
-
-            player_busts: bool = check_for_bust(player_hand)
+            display_hands(money, wager, player_hand, dealer_hand)
 
             if player_value > 21:
                 break
@@ -99,27 +90,15 @@ def main() -> None:
         # Handle dealer actions
         if player_value < 21:
             print("\n--------------\n" + "Dealer's turn:\n" + "--------------")
-            while dealer_value < 17:  # Get dealer moves
+            while get_hand_value(dealer_hand) < 17:  # Calculate hand value
                 dealer_value, message = take_card(deck, dealer_hand, "dealer")
                 print(" ".join(message))
-                display_hands(
-                    money, wager, player_hand, dealer_hand, player_value, dealer_value
-                )
+                display_hands(money, wager, player_hand, dealer_hand)
                 time.sleep(2)
 
-        display_hands(
-            money,
-            wager,
-            player_hand,
-            dealer_hand,
-            player_value,
-            dealer_value,
-            hide_dealer=False,
-        )
-
         # Decide winner of hand
-        outcome = get_outcome(player_busts, player_value, dealer_value)
-
+        display_hands(money, wager, player_hand, dealer_hand, hide_dealer=False)
+        outcome: str = get_outcome(player_hand, dealer_hand)
         money = payout(outcome, money, wager)
 
         print(f"\nYou {outcome}", end="")
@@ -209,44 +188,58 @@ def load_json_txt(path: str, key: str) -> dict:
 
 
 def get_deck() -> list[tuple[str, str]]:
-    deck: list[tuple[str, str]] = []
+    # deck: list[tuple[str, str]] = []
+    ranks: list = [str(num) for num in range(2, 11)] + ["J", "Q", "K", "A"]
+    suits: list[str] = [HEARTS, SPADES, CLUBS, DIAMONDS]
 
-    for rank in range(2, 11):
-        for suit in [HEARTS, SPADES, CLUBS, DIAMONDS]:
-            card = (str(rank), suit)
-            deck.append(card)
+    deck: list[tuple[str, str]] = [(rank, suit) for rank in ranks for suit in suits]
 
-    for face in ["A", "K", "Q", "J"]:
-        for suit in [HEARTS, SPADES, CLUBS, DIAMONDS]:
-            card = (face, suit)
-            deck.append(card)
     random.shuffle(deck)
     return deck
 
 
+def get_hand_value(hand: list[tuple]) -> int:
+    value: int = 0
+    num_aces: int = 0
+
+    for card in hand:
+        if card[0] in ["K", "Q", "J"]:
+            value += 10
+        elif card[0] == "A":
+            value += 1
+            num_aces += 1
+        else:
+            value += int(card[0])
+
+    for i in range(1, num_aces + 1):
+        while value + 10 <= 21:
+            value += 10
+
+    return value
+
+
 def display_hands(
-    money: int,
-    wager: int,
-    player_hand: list,
-    dealer_hand: list,
-    player_value: int,
-    dealer_value: int,
-    hide_dealer: bool = True,
-):
+    money: int, wager: int, plr_hand: list, dlr_hand: list, hide_dealer: bool = True
+) -> None:
+    dealer_value: int = get_hand_value(dlr_hand)
+    player_value: int = get_hand_value(plr_hand)
+
+    # Dealer
     if hide_dealer:
         print("DEALER: ??")
     else:
         print(f"DEALER: {dealer_value}")
-
     print("Dealer busts!") if dealer_value > 21 else None
-    draw_hand(dealer_hand, hide_dealer)
+    draw_hand(dlr_hand, hide_dealer)
+
+    # Player
     print(f"PLAYER: {player_value}")
     print("Player busts!") if player_value > 21 else None
-    draw_hand(player_hand)
+    draw_hand(plr_hand, hide_dealer=False)
     print(f"Money: ${money-wager} Wager: ${wager}")
 
 
-def draw_hand(hand: list[tuple[str, str]], hide_dealer: bool = False) -> None:
+def draw_hand(hand: list[tuple[str, str]], hide_dealer: bool) -> None:
     rows = ["", "", "", "", ""]
 
     for card in hand:
@@ -282,38 +275,11 @@ def get_player_move(player_hand: list) -> str:
     return player_move
 
 
-def get_hand_value(hand: list[tuple]) -> int:
-    value: int = 0
-    num_aces: int = 0
-
-    for card in hand:
-        if card[0] in ["K", "Q", "J"]:
-            value += 10
-        elif card[0] == "A":
-            value += 1
-            num_aces += 1
-        else:
-            value += int(card[0])
-
-    for i in range(1, num_aces + 1):
-        while value + 10 <= 21:
-            value += 10
-
-    return value
-
-
-def take_card(
-    deck: list,
-    hand: list,
-    owner: Literal["player", "dealer"],
-) -> tuple:
+def take_card(deck: list, hand: list, owner: Literal["player", "dealer"]) -> tuple:
     hand.append(deck.pop())
     rank, suit = hand[-1]
 
-    message = [
-        "",
-        f"a {rank} of {suit} from the deck.\n",
-    ]
+    message = ["", f"a {rank} of {suit} from the deck.\n"]
 
     if owner == "player":
         message[0] = "\nYou take"
@@ -323,20 +289,14 @@ def take_card(
     return get_hand_value(hand), message
 
 
-def check_for_bust(hand, func: Callable = get_hand_value) -> bool:
-    return True if func(hand) > 21 else False
-
-
-def get_outcome(
-    player_busts: bool,
-    player_hand_value: int,
-    dealer_hand_value: int = 0,
-) -> str:
+def get_outcome(plr_hand: list, dlr_hand: list) -> str:
+    dealer_value: int = get_hand_value(dlr_hand)
+    player_value: int = get_hand_value(plr_hand)
     # Player wins hand
-    if (player_hand_value > dealer_hand_value) | dealer_hand_value > 21:
+    if (player_value > dealer_value) | dealer_value > 21:
         return "win"
     # Player loses hand
-    elif player_busts | (player_hand_value < dealer_hand_value):
+    elif player_value > 21 | (player_value < dealer_value):
         return "lose"
     # Hand is tied
     else:
