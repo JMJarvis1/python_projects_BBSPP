@@ -1,0 +1,47 @@
+{
+    "bagels.py": "",
+    "blackjack.py": {
+        "title": [
+            "",
+            "Blackjack",
+            "---------",
+            ""
+        ],
+        "rules": [
+            "In Blackjack, also known as 21, the player wagers a certain amount of money on each hand and attempts to get the value of their hand as close to 21 as possible without going over that value.",
+            "",
+            "There are three moves available:",
+            "",
+            "   1. (H)it         - Take another card.",
+            "   2. (S)tand       - End your play for the hand.",
+            "   3. (D)ouble down - Increase the value of your wager.",
+            "",
+            "     * You can only (D)ouble down if it is your first turn on that",
+            "       hand and you must take exactly one more card before standing.",
+            "",
+            "Card Values:",
+            "   1. Facecards (K, Q, J) are each worth 10 points.",
+            "   2. Aces are worth either 1 or 11 points.",
+            "   3. All other cards are worth their face value.",
+            "",
+            "The possible outcomes for each hand:",
+            "",
+            "   Player Hand   Dealer Hand         Result",
+            "   -----------   -----------   --------------------",
+            "      > 21           Any       Player Loses (Busts)",
+            "      < 21        < Player     Player Wins",
+            "      < 21          > 21       Dealer Busts",
+            "       Tie           Tie               Tie",
+            "",
+            "Winning vs. Losing:",
+            "   If you win : You will be awarded the amount you wagered.",
+            "   If you lose: You will lose the ammount you wagered.",
+            "   If you tie : The wagered money is returned to you.",
+            "",
+            "Other rules:",
+            "   1. This version of the game does not allow for splitting,",
+            "      surrendering, or buying insurance.",
+            "   2. The dealer stands at 17 or higher."
+        ]
+    }
+}
