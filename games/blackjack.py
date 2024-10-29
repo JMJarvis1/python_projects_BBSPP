@@ -32,11 +32,14 @@ More information can be found at: https://en.wikipedia.org/wiki/blackjack
 
 """
 
+import sys
+import os
 import json
+import logging
 import random
 import time
-from typing import Literal
 import game_functions
+from typing import Literal
 
 # Constants
 HEARTS: str = chr(9829)  # Character 9829 is '♥'
@@ -47,9 +50,8 @@ MONEY: int = 5000
 
 
 def main() -> None:
-    money: int = MONEY
-
-    start_game()
+    current_hand, money = start_new_game()
+    display_info()
 
     while True:  # Main game loop.
         player_move: str = ""
@@ -65,7 +67,7 @@ def main() -> None:
 
         # Display Hands
         print()
-        describe_hands(money, wager, player_hand, dealer_hand)
+        describe_hands(money, wager, current_hand, player_hand, dealer_hand)
         print()
 
         # Handle player actions
@@ -83,7 +85,7 @@ def main() -> None:
                         wager = get_wager(money, wager)
                     print(" ".join(message))
 
-            describe_hands(money, wager, player_hand, dealer_hand)
+            describe_hands(money, wager, current_hand, player_hand, dealer_hand)
 
             player_busts = True if sum_hand_value(player_hand) > 21 else False
 
@@ -94,13 +96,15 @@ def main() -> None:
         if not player_busts:
             print("\n--------------\n" + "Dealer's turn:\n" + "--------------")
             while sum_hand_value(dealer_hand) < 17:  # Dealer loop
-                dealer_value, message = take_card(deck, dealer_hand, "dealer")
+                message = take_card(deck, dealer_hand, "dealer")
                 print(" ".join(message))
-                describe_hands(money, wager, player_hand, dealer_hand)
+                describe_hands(money, wager, current_hand, player_hand, dealer_hand)
                 time.sleep(2)  # Delay between moves
 
         # Decide winner
-        describe_hands(money, wager, player_hand, dealer_hand, hide_dealer=False)
+        describe_hands(
+            money, wager, current_hand, player_hand, dealer_hand, hide_dealer=False
+        )
         outcome: str = get_outcome(player_hand, dealer_hand)
         money = payout(outcome, money, wager)
 
@@ -113,8 +117,7 @@ def main() -> None:
             new_game: bool = game_functions.play_again()
 
             if new_game:
-                money = MONEY
-                start_game()
+                current_hand, money = start_new_game()
                 continue  # Restart game loop with money reset to start value
             else:
                 game_functions.exit_game()
@@ -122,29 +125,69 @@ def main() -> None:
             continue  # Restart loop with current state intact
 
         while input("Press Enter to continue...") != "":
+            current_hand += 1
             continue
 
 
-def start_game() -> None:
+def start_new_game() -> tuple[int, int]:
     """
-    Begins a new game with money set its starting value.
+    Initialize a new game with money set its starting value.
+    """
+    current_hand: int = 1
+    money = MONEY
+
+    return current_hand, money
+
+
+def display_info(title=True, rules=True) -> None:
+    """
+    Load the Title and Rules texts from a json file and display them on the screen.
+
+    :param title: Include title text, defaults to True
+    :type intro: bool, optional
+    :param rules: Include rules text, defaults to True
+    :type rules: bool, optional
     """
     game_functions.clear_scrn()
 
     # Load program text from JSON file.
+    sys.path.append(os.getcwd() + "../")  # Make sure file is in path
     try:
-        game_txt: dict = load_json_txt(path="text.json", key="blackjack.py")
-    except FileNotFoundError:  # For lauch.json debugging
-        game_txt = load_json_txt(path="games/text.json", key="blackjack.py")
+        game_txt: dict = load_json_txt(
+            path="/workspaces/python_games/games/text.json", key="blackjack.py"
+        )
+    except FileNotFoundError:
+        logging.error(" A fatal error occurred when attempting to load 'text.json.'")
+        game_functions.exit_game()
 
     # Display Introduction
-    title_txt: list = game_txt["title"]
-    game_functions.display_message(title_txt, msg_just="center")
+    if title:
+        title_txt: list = game_txt["title"]
+        game_functions.display_message(title_txt, msg_just="center")
 
     # Display rules
-    rules_intro: list = game_txt["rules"]
-    game_functions.display_message(rules_intro)
+    if rules:
+        rules_intro: list = game_txt["rules"]
+        game_functions.display_message(rules_intro)
     print()
+
+
+def load_json_txt(path: str, key: str) -> dict:
+    """
+    Loads the game's text from a json file.
+
+    :param path: Path to file
+    :type path: str
+    :param key: The name of the game 'blackjack.py' we want the text for.
+    :type key: str
+    :return: The text from the file specific to this game.
+    :rtype: dict
+    """
+    with open(file=path, mode="r", encoding="UTF-8") as read_file:
+        all_txt = json.load(read_file)
+        selected_txt: dict = all_txt.get(key)
+
+    return selected_txt
 
 
 def get_wager(money: int, wager: int = 0) -> int:
@@ -173,24 +216,6 @@ def get_wager(money: int, wager: int = 0) -> int:
         else:
             wager += amount
         return wager
-
-
-def load_json_txt(path: str, key: str) -> dict:
-    """
-    Loads the game's text from a json file.
-
-    :param path: Path to file
-    :type path: str
-    :param key: The name of the game 'blackjack.py' we want the text for.
-    :type key: str
-    :return: The text from the file specific to this game.
-    :rtype: dict
-    """
-    with open(file=path, mode="r", encoding="UTF-8") as read_file:
-        all_txt = json.load(read_file)
-        selected_txt: dict = all_txt.get(key)
-
-    return selected_txt
 
 
 def build_deck() -> list[tuple[str, str]]:
@@ -240,7 +265,12 @@ def sum_hand_value(hand: list[tuple[str, str]]) -> int:
 
 
 def describe_hands(
-    money: int, wager: int, plr_hand: list, dlr_hand: list, hide_dealer: bool = True
+    money: int,
+    wager: int,
+    curr_hand: int,
+    plr_hand: list,
+    dlr_hand: list,
+    hide_dealer: bool = True,
 ) -> None:
     """
     Displays the text and art associated with the current state of play.
@@ -260,6 +290,7 @@ def describe_hands(
     dealer_value: int = sum_hand_value(dlr_hand)
     player_value: int = sum_hand_value(plr_hand)
 
+    print(f"\nHand #{curr_hand}\n")
     # Dealer
     if hide_dealer:
         print("DEALER: ??")  # Hide dealer's score
@@ -301,6 +332,15 @@ def draw_hand(hand: list[tuple[str, str]], hide_dealer: bool) -> None:
 
 
 def get_player_move(player_hand: list) -> str:
+    """
+    Gets player choice of move from the folowing options:
+    (H)it, (S)tand, (D)ouble down, (Q)uit.
+
+    :param player_hand: Current cards held by player
+    :type player_hand: list
+    :return: Player's chosen move.
+    :rtype: str
+    """
     prompts: list = ["(H)it", "(S)tand"]
     valid_moves: list = ["H", "S", "Q"]
     player_move: str = ""
@@ -314,12 +354,26 @@ def get_player_move(player_hand: list) -> str:
     prompt: str = ", ".join(prompts)
 
     while player_move not in valid_moves:
-        player_move = input(prompt).upper()
+        player_move = input(prompt)[0].upper()
 
     return player_move
 
 
-def take_card(deck: list, hand: list, owner: Literal["player", "dealer"]) -> tuple:
+def take_card(
+    deck: list, hand: list[tuple[str, str]], owner: Literal["player", "dealer"]
+) -> list:
+    """
+    Draw a card from the deck and add it to the hand provide, print details regarding the card drawn, and return updated hand.
+
+    :param deck: The deck of cards being drawn from.
+    :type deck: list
+    :param hand: The hand (player or dealer) receiving the new card.
+    :type hand: list[tuple[str, str]]
+    :param owner: Ownership of hand.
+    :type owner: Literal["player", "dealer"]
+    :return: Updated hand.
+    :rtype: list
+    """
     hand.append(deck.pop())
     rank, suit = hand[-1]
 
@@ -330,10 +384,20 @@ def take_card(deck: list, hand: list, owner: Literal["player", "dealer"]) -> tup
     elif owner == "dealer":
         message[0] = "\nThe dealer takes"
 
-    return sum_hand_value(hand), message
+    return message
 
 
 def get_outcome(plr_hand: list, dlr_hand: list) -> str:
+    """
+    Determine if player wins, loses, ot ties.
+
+    :param plr_hand: Player's cards at end of hand
+    :type plr_hand: list
+    :param dlr_hand: Dealers's cards at end of hand
+    :type dlr_hand: list
+    :return: Player rusult. ('win', 'lose', 'tie')
+    :rtype: str
+    """
     dealer_value: int = sum_hand_value(dlr_hand)
     player_value: int = sum_hand_value(plr_hand)
 
@@ -348,6 +412,18 @@ def get_outcome(plr_hand: list, dlr_hand: list) -> str:
 
 
 def payout(outcome: str, money: int, wager: int) -> int:
+    """
+    Updates player money based upon outcome of most recent hand.
+
+    :param outcome: Whether player won, lost, or tied.
+    :type outcome: str
+    :param money: Amount of money held by player.
+    :type money: int
+    :param wager: Amount wagered by player during hand.
+    :type wager: int
+    :return: Updated value for money. (money +/- wager)
+    :rtype: int
+    """
     match outcome:
         case "win":
             money += wager
