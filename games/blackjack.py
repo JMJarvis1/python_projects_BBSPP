@@ -41,6 +41,7 @@ import time
 import game_functions
 from typing import Literal
 
+
 # Constants
 HEARTS: str = chr(9829)  # Character 9829 is '♥'
 SPADES: str = chr(9824)  # Character 9824 is '♠'
@@ -67,13 +68,13 @@ def main() -> None:
 
         # Display Hands
         print()
-        describe_hands(money, wager, current_hand, player_hand, dealer_hand)
+        describe_hands(current_hand, player_hand, dealer_hand)
         print()
 
         # Handle player actions
         print("----------\n" + "Your turn:\n" + "----------\n")
         while player_move not in ["S", "D"]:  # Player action loop
-            player_move = get_player_move(player_hand)
+            player_move = get_player_move(player_hand, money, wager)
 
             match player_move:
                 case "Q":  # Quits.
@@ -85,7 +86,7 @@ def main() -> None:
                         wager = get_wager(money, wager)
                     print(" ".join(message))
 
-            describe_hands(money, wager, current_hand, player_hand, dealer_hand)
+            describe_hands(current_hand, player_hand, dealer_hand)
 
             player_busts = True if sum_hand_value(player_hand) > 21 else False
 
@@ -98,13 +99,11 @@ def main() -> None:
             while sum_hand_value(dealer_hand) < 17:  # Dealer loop
                 message = take_card(deck, dealer_hand, "dealer")
                 print(" ".join(message))
-                describe_hands(money, wager, current_hand, player_hand, dealer_hand)
+                describe_hands(current_hand, player_hand, dealer_hand)
                 time.sleep(2)  # Delay between moves
 
         # Decide winner
-        describe_hands(
-            money, wager, current_hand, player_hand, dealer_hand, hide_dealer=False
-        )
+        describe_hands(current_hand, player_hand, dealer_hand, hide_dealer=False)
         outcome: str = get_outcome(player_hand, dealer_hand)
         money = payout(outcome, money, wager)
 
@@ -117,7 +116,16 @@ def main() -> None:
             new_game: bool = game_functions.play_again()
 
             if new_game:
+                review_rules: str = " "
                 current_hand, money = start_new_game()
+                while review_rules[0] not in ["Y", "N"]:
+                    review_rules = (
+                        input("Do you want to see the rules again? (Y/N)\n> ")
+                        .strip()
+                        .upper()
+                    )
+                display_info() if review_rules == "Y" else display_info(rules=False)
+
                 continue  # Restart game loop with money reset to start value
             else:
                 game_functions.exit_game()
@@ -133,6 +141,7 @@ def start_new_game() -> tuple[int, int]:
     """
     Initialize a new game with money set its starting value.
     """
+    game_functions.clear_scrn()
     current_hand: int = 1
     money = MONEY
 
@@ -172,6 +181,92 @@ def display_info(title=True, rules=True) -> None:
     print()
 
 
+def build_deck() -> list[tuple[str, str]]:
+    """
+    Create and return a shuffled deck of cards.
+
+    :return: A shuffled deck of cards
+    :rtype: list[tuple[str, str]]
+    """
+    # deck: list[tuple[str, str]] = []
+    ranks: list = [str(num) for num in range(2, 11)] + ["J", "Q", "K", "A"]
+    suits: list[str] = [HEARTS, SPADES, CLUBS, DIAMONDS]
+
+    deck: list[tuple[str, str]] = [(rank, suit) for rank in ranks for suit in suits]
+
+    random.shuffle(deck)
+    return deck
+
+
+def get_wager(money: int, wager: int = 0) -> int:
+    """
+    Receive and validate player's wager.
+
+    :param money: Current money held by player
+    :type money: int
+    :param wager: Amount already wagered, defaults to 0
+    :type wager: int, optional
+    :return: The new or updated value for the wager
+    :rtype: int
+    """
+    while True:
+        amount: int = 0
+        game_functions.display_message(
+            f"You currently have ${money-wager} available. How much would you like to wager?"
+        )
+
+        try:
+            amount += int(input("> $"))
+        except ValueError:
+            print("\nPlease only enter a number value.\n")
+            continue
+        if money < amount:
+            print(f"\nError: You dont have ${amount:,} to bet! Try again...\n")
+            continue
+        else:
+            wager += amount
+        return wager
+
+
+def describe_hands(
+    curr_hand: int,
+    plr_hand: list,
+    dlr_hand: list,
+    hide_dealer: bool = True,
+) -> None:
+    """
+    Displays the text and art associated with the current state of play.
+
+    :param money: Current amount of money available to the player.
+    :type money: int
+    :param wager: Current amount wagered by player.
+    :type wager: int
+    :param plr_hand: The player's hand.
+    :type plr_hand: list
+    :param dlr_hand: The dealer's hand.
+    :type dlr_hand: list
+    :param hide_dealer: Hide first card if 'True', defaults to True
+    :type hide_dealer: bool, optional
+    """
+    # Calculate value of each hand
+    dealer_value: int = sum_hand_value(dlr_hand)
+    player_value: int = sum_hand_value(plr_hand)
+
+    print(f"Hand #{curr_hand}\n")
+    # Dealer
+    if hide_dealer:
+        print("DEALER: ??")  # Hide dealer's score
+    else:
+        print(f"DEALER: {dealer_value}")
+        print("Dealer busts!") if dealer_value > 21 else None
+    draw_hand(dlr_hand, hide_dealer)  # Draw hand
+
+    # Player
+    print(f"PLAYER: {player_value}")
+    print("Player busts!") if player_value > 21 else None
+    draw_hand(plr_hand, hide_dealer=False)  # Draw hand
+
+
 def load_json_txt(path: str, key: str) -> dict:
     """
     Loads the game's text from a json file.
@@ -188,51 +283,6 @@ def load_json_txt(path: str, key: str) -> dict:
         selected_txt: dict = all_txt.get(key)
 
     return selected_txt
-
-
-def get_wager(money: int, wager: int = 0) -> int:
-    """
-    Receive and validate player's wager.
-
-    :param money: Current money held by player
-    :type money: int
-    :param wager: Amount already wagered, defaults to 0
-    :type wager: int, optional
-    :return: The new or updated value for the wager
-    :rtype: int
-    """
-    while True:
-        amount: int = 0
-        print(f"MONEY: ${money-wager}")
-        print("How much would you like to wager?")
-        try:
-            amount += int(input("> $"))
-        except ValueError:
-            print("\nPlease only enter a number value.\n")
-            continue
-        if money < amount:
-            print(f"\nError: You dont have ${amount:,} to bet! Try again...\n")
-            continue
-        else:
-            wager += amount
-        return wager
-
-
-def build_deck() -> list[tuple[str, str]]:
-    """
-    Create and return a shuffled deck of cards.
-
-    :return: A shuffled deck of cards
-    :rtype: list[tuple[str, str]]
-    """
-    # deck: list[tuple[str, str]] = []
-    ranks: list = [str(num) for num in range(2, 11)] + ["J", "Q", "K", "A"]
-    suits: list[str] = [HEARTS, SPADES, CLUBS, DIAMONDS]
-
-    deck: list[tuple[str, str]] = [(rank, suit) for rank in ranks for suit in suits]
-
-    random.shuffle(deck)
-    return deck
 
 
 def sum_hand_value(hand: list[tuple[str, str]]) -> int:
@@ -264,48 +314,6 @@ def sum_hand_value(hand: list[tuple[str, str]]) -> int:
     return value
 
 
-def describe_hands(
-    money: int,
-    wager: int,
-    curr_hand: int,
-    plr_hand: list,
-    dlr_hand: list,
-    hide_dealer: bool = True,
-) -> None:
-    """
-    Displays the text and art associated with the current state of play.
-
-    :param money: Current amount of money available to the player.
-    :type money: int
-    :param wager: Current amount wagered by player.
-    :type wager: int
-    :param plr_hand: The player's hand.
-    :type plr_hand: list
-    :param dlr_hand: The dealer's hand.
-    :type dlr_hand: list
-    :param hide_dealer: Hide first card if 'True', defaults to True
-    :type hide_dealer: bool, optional
-    """
-    # Calculate value of each hand
-    dealer_value: int = sum_hand_value(dlr_hand)
-    player_value: int = sum_hand_value(plr_hand)
-
-    print(f"\nHand #{curr_hand}\n")
-    # Dealer
-    if hide_dealer:
-        print("DEALER: ??")  # Hide dealer's score
-    else:
-        print(f"DEALER: {dealer_value}")
-        print("Dealer busts!") if dealer_value > 21 else None
-    draw_hand(dlr_hand, hide_dealer)  # Draw hand
-
-    # Player
-    print(f"PLAYER: {player_value}")
-    print("Player busts!") if player_value > 21 else None
-    draw_hand(plr_hand, hide_dealer=False)  # Draw hand
-    print(f"Money: ${money-wager} Wager: ${wager}")
-
-
 def draw_hand(hand: list[tuple[str, str]], hide_dealer: bool) -> None:
     """
     Draws a visual represntation of the cards in a hand.
@@ -331,7 +339,7 @@ def draw_hand(hand: list[tuple[str, str]], hide_dealer: bool) -> None:
     [print(row) for row in rows]  # Draws card to screen
 
 
-def get_player_move(player_hand: list) -> str:
+def get_player_move(player_hand: list, money, wager) -> str:
     """
     Gets player choice of move from the folowing options:
     (H)it, (S)tand, (D)ouble down, (Q)uit.
@@ -349,7 +357,7 @@ def get_player_move(player_hand: list) -> str:
         prompts.append("(D)ouble down")
         valid_moves.append("D")
 
-    prompts.append("or (Q) to quit.\n> ")
+    prompts.append(f"or (Q) to quit. Money: ${money-wager} Wager: ${wager}\n> ")
 
     prompt: str = ", ".join(prompts)
 
@@ -401,7 +409,7 @@ def get_outcome(plr_hand: list, dlr_hand: list) -> str:
     dealer_value: int = sum_hand_value(dlr_hand)
     player_value: int = sum_hand_value(plr_hand)
 
-    if not player_value >= 21:
+    if not player_value > 21:
         if player_value > dealer_value or dealer_value > 21:
             return "win"
         elif player_value < dealer_value:
