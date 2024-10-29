@@ -84,11 +84,11 @@ def main() -> None:
 
             display_hands(money, wager, player_hand, dealer_hand)
 
-            if player_value > 21:
+            if get_hand_value(player_hand) > 21:
                 break
 
         # Handle dealer actions
-        if player_value < 21:
+        if get_hand_value(player_hand) < 21:
             print("\n--------------\n" + "Dealer's turn:\n" + "--------------")
             while get_hand_value(dealer_hand) < 17:  # Calculate hand value
                 dealer_value, message = take_card(deck, dealer_hand, "dealer")
@@ -229,7 +229,7 @@ def display_hands(
         print("DEALER: ??")
     else:
         print(f"DEALER: {dealer_value}")
-    print("Dealer busts!") if dealer_value > 21 else None
+        print("Dealer busts!") if dealer_value > 21 else None
     draw_hand(dlr_hand, hide_dealer)
 
     # Player
@@ -292,15 +292,15 @@ def take_card(deck: list, hand: list, owner: Literal["player", "dealer"]) -> tup
 def get_outcome(plr_hand: list, dlr_hand: list) -> str:
     dealer_value: int = get_hand_value(dlr_hand)
     player_value: int = get_hand_value(plr_hand)
-    # Player wins hand
-    if (player_value > dealer_value) | dealer_value > 21:
-        return "win"
-    # Player loses hand
-    elif player_value > 21 | (player_value < dealer_value):
-        return "lose"
-    # Hand is tied
-    else:
-        return "tie"
+
+    if not player_value >= 21:
+        if player_value > dealer_value or dealer_value > 21:
+            return "win"
+        elif player_value < dealer_value:
+            return "lose"
+        elif player_value == dealer_value:
+            return "tie"
+    return "lose"
 
 
 def payout(outcome: str, money: int, wager: int) -> int:
